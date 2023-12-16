@@ -6,6 +6,7 @@ namespace UniRx.Examples
 {
     public class Sample06_ConvertToCoroutine : MonoBehaviour
     {
+#if !UNITY_2019_1_OR_NEWER || UNIRX_WWW_SUPPORT
         // convert IObservable to Coroutine
         void Start()
         {
@@ -58,5 +59,6 @@ namespace UniRx.Examples
 #endif
 #endif
 
+#endif
     }
 }

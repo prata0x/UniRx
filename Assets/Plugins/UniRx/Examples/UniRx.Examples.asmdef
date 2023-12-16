@@ -8,5 +8,12 @@
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "allowUnsafeCode": false,
+    "versionDefines": [
+        {
+            "name": "com.unity.modules.unitywebrequestwww",
+            "expression": "",
+            "define": "UNIRX_WWW_SUPPORT"
+        }
+    ]
 }

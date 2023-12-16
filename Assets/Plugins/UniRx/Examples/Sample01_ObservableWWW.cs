@@ -11,6 +11,7 @@ namespace UniRx.Examples
     // sample script, attach your object.
     public class Sample01_ObservableWWW : MonoBehaviour
     {
+#if !UNITY_2019_1_OR_NEWER || UNIRX_WWW_SUPPORT
         void Start()
         {
             // Basic: Download from google.
@@ -80,6 +81,7 @@ namespace UniRx.Examples
                     .Subscribe();
             }
         }
+#endif
     }
 }
 
