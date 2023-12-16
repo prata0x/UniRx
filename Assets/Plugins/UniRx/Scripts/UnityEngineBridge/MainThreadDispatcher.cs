@@ -498,7 +498,9 @@ namespace UniRx
                 fixedUpdateMicroCoroutine = new MicroCoroutine(ex => unhandledExceptionCallback(ex));
                 endOfFrameMicroCoroutine = new MicroCoroutine(ex => unhandledExceptionCallback(ex));
 
+#if UNITY_2018_1_OR_NEWER
                 Application.quitting += OnApplicationQuitting;
+#endif
 
                 StartCoroutine(RunUpdateMicroCoroutine());
                 StartCoroutine(RunFixedUpdateMicroCoroutine());
@@ -592,7 +594,9 @@ namespace UniRx
             {
                 instance = GameObject.FindObjectOfType<MainThreadDispatcher>();
                 initialized = instance != null;
+#if UNITY_2018_1_OR_NEWER
                 Application.quitting -= OnApplicationQuitting;
+#endif
 
                 /*
                 // Although `this` still refers to a gameObject, it won't be found.
@@ -672,7 +676,11 @@ namespace UniRx
 
         Subject<Unit> onApplicationQuit;
 
+#if UNITY_2018_1_OR_NEWER
         void OnApplicationQuitting()
+#else
+        void OnApplicationQuit()
+#endif
         {
             isQuitting = true;
             if (onApplicationQuit != null) onApplicationQuit.OnNext(Unit.Default);
