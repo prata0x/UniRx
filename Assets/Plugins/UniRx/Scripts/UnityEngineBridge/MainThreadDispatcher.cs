@@ -497,9 +497,9 @@ namespace UniRx
                 updateMicroCoroutine = new MicroCoroutine(ex => unhandledExceptionCallback(ex));
                 fixedUpdateMicroCoroutine = new MicroCoroutine(ex => unhandledExceptionCallback(ex));
                 endOfFrameMicroCoroutine = new MicroCoroutine(ex => unhandledExceptionCallback(ex));
-                
+
                 Application.quitting += OnApplicationQuitting;
-    
+
                 StartCoroutine(RunUpdateMicroCoroutine());
                 StartCoroutine(RunFixedUpdateMicroCoroutine());
                 StartCoroutine(RunEndOfFrameMicroCoroutine());
