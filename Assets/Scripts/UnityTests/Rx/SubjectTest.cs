@@ -488,27 +488,27 @@ namespace UniRx.Tests
             var subject = new ReplaySubject<int>(1);
 
             var onNext = new List<int>();
-            
+
             subject.OnNext(1);
 
             var _ = subject
                 .Take(1)
                 .Do(subject.OnNext)
                 .Subscribe(onNext.Add);
-            
+
             onNext.Is(1);
-            
+
             _.Dispose();
             onNext.Clear();
-            
+
             subject.OnNext(2);
             subject.OnNext(3);
-            
+
             _ = subject
                 .Take(1)
                 .Do(subject.OnNext)
                 .Subscribe(onNext.Add);
-            
+
             onNext.Is(3);
         }
     }
