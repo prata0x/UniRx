@@ -593,6 +593,7 @@ namespace UniRx
                 instance = GameObject.FindObjectOfType<MainThreadDispatcher>();
                 initialized = instance != null;
                 Application.quitting -= OnApplicationQuitting;
+
                 /*
                 // Although `this` still refers to a gameObject, it won't be found.
                 var foundDispatcher = GameObject.FindObjectOfType<MainThreadDispatcher>();
