@@ -71,7 +71,7 @@ namespace UniRx
                 else
                 {
                     old.OnCompleted();
-                }                
+                }
             }
             catch (Exception ex)
             {
