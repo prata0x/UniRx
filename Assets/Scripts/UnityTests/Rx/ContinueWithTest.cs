@@ -38,7 +38,7 @@ namespace UniRx.Tests.Operators
             record.Values[0].Is(100);
             record.Notifications.Last().Kind.Is(NotificationKind.OnCompleted);
         }
-        
+
         [Test]
         public void ContinueWith_PublishesLastValueAndCompletes_WithDelay()
         {
