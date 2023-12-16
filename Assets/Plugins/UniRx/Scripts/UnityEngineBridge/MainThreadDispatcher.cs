@@ -451,7 +451,7 @@ namespace UniRx
                     // avoid "Some objects were not cleaned up when closing the scene find target" error.
                     return;
                 }
-	            
+
                 MainThreadDispatcher dispatcher = null;
 
                 try
