@@ -5,5 +5,7 @@
     "unity": "2018.3",
     "description": "Reactive Extensions for Unity",
     "license": "MIT",
-    "dependencies": {}
+    "dependencies": {
+        "com.unity.modules.imgui": "1.0.0"
+    }
 }
