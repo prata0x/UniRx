@@ -1299,7 +1299,7 @@ You can convert Task -> UniTask: `AsUniTask`, `UniTask` -> `UniTask<AsyncUnit>`:
 
 If you want to convert async to coroutine, you can use `UniTask.ToCoroutine`, this is useful to use only allow coroutine system.
 
-Of course, IObservable is awaitable.
+Ofcourse, IObservable is awaitable.
 
 ```csharp
 // You can use Task(C# 6) or UniTask(C# 7)
