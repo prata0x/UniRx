@@ -10,6 +10,7 @@ namespace UniRx.Examples
 {
     public class Sample05_ConvertFromCoroutine
     {
+#if !UNITY_2019_1_OR_NEWER || UNIRX_WWW_SUPPORT
         // public method
         public static IObservable<string> GetWWW(string url)
         {
@@ -38,6 +39,7 @@ namespace UniRx.Examples
                 observer.OnCompleted();
             }
         }
+#endif
     }
 }
 #if UNITY_2018_3_OR_NEWER
