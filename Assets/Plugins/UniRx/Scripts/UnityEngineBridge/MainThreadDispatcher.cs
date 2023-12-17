@@ -472,7 +472,11 @@ namespace UniRx
 
                 try
                 {
+#if UNITY_2020_3_OR_NEWER
+                    dispatcher = GameObject.FindAnyObjectByType<MainThreadDispatcher>();
+#else
                     dispatcher = GameObject.FindObjectOfType<MainThreadDispatcher>();
+#endif
                 }
                 catch
                 {
@@ -597,7 +601,11 @@ namespace UniRx
 
         public static void CullAllExcessDispatchers()
         {
+#if UNITY_2020_3_OR_NEWER
+            var dispatchers = GameObject.FindObjectsByType<MainThreadDispatcher>(FindObjectsSortMode.None);
+#else
             var dispatchers = GameObject.FindObjectsOfType<MainThreadDispatcher>();
+#endif
             for (int i = 0; i < dispatchers.Length; i++)
             {
                 DestroyDispatcher(dispatchers[i]);
@@ -608,7 +616,11 @@ namespace UniRx
         {
             if (instance == this)
             {
+#if UNITY_2020_3_OR_NEWER
+                instance = GameObject.FindAnyObjectByType<MainThreadDispatcher>();
+#else
                 instance = GameObject.FindObjectOfType<MainThreadDispatcher>();
+#endif
                 initialized = instance != null;
 #if UNITY_2018_1_OR_NEWER
                 Application.quitting -= OnApplicationQuitting;
