@@ -20,7 +20,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void TimerTest()
+        public void Timer()
         {
             // periodic(Observable.Interval)
             {
@@ -100,7 +100,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void DelayTest()
+        public void Delay()
         {
             var now = Scheduler.ThreadPool.Now;
 
@@ -121,7 +121,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void SampleTest()
+        public void Sample()
         {
             // 2400, 4800, 7200, 9600
             var xs = Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(1))
@@ -138,7 +138,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void TimeoutTest()
+        public void Timeout()
         {
             var xs = Observable.Concat(
                     Observable.Return(1).Delay(TimeSpan.FromSeconds(1)),
@@ -157,7 +157,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void TimeoutTestOffset()
+        public void TimeoutOffset()
         {
             var now = Scheduler.ThreadPool.Now;
             var xs = Observable.Concat(
@@ -178,7 +178,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void ThrottleTest()
+        public void Throttle()
         {
             var xs = Observable.Concat(
                     Observable.Return(1).Delay(TimeSpan.FromSeconds(1)),
@@ -203,7 +203,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void ThrottleFirstTest()
+        public void ThrottleFirst()
         {
             var xs = Observable.Concat(
                     Observable.Return(1),

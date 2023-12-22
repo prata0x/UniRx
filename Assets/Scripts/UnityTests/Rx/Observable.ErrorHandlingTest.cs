@@ -7,7 +7,7 @@ using System.Text;
 namespace UniRx.Tests
 {
     
-    public class ErrorHandlingTest
+    public class ObservableErrorHandlingTest
     {
         [Test]
         public void Finally()

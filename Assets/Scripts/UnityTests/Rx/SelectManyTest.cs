@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace UniRx.Tests.Operators
 {
     
-    public class SelectMany
+    public class SelectManyTest
     {
         [Test]
         public void Selector()

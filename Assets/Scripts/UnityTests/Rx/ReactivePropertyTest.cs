@@ -375,7 +375,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void WithLastTest()
+        public void WithLast()
         {
             var rp1 = Observable.Return("1").ToReadOnlyReactiveProperty();
             rp1.Last().Record().Notifications.Is(

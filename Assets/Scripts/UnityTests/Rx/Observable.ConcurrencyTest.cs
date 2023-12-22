@@ -22,7 +22,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void ObserveOnTest()
+        public void ObserveOn()
         {
             Init();
 
@@ -49,7 +49,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void AmbTest()
+        public void Amb()
         {
             var xs = Observable.Return(10).Delay(TimeSpan.FromSeconds(1), Scheduler.ThreadPool).Concat(Observable.Range(1, 3));
             var ys = Observable.Return(30).Delay(TimeSpan.FromSeconds(2), Scheduler.ThreadPool).Concat(Observable.Range(5, 3));
@@ -72,7 +72,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void AmbMultiTest()
+        public void AmbMulti()
         {
             var xs = Observable.Return(10).Delay(TimeSpan.FromSeconds(5), Scheduler.ThreadPool).Concat(Observable.Range(1, 3));
             var ys = Observable.Return(30).Delay(TimeSpan.FromSeconds(1), Scheduler.ThreadPool).Concat(Observable.Range(5, 3));
