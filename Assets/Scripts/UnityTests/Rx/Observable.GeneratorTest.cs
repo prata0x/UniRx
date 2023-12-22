@@ -116,7 +116,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void OptimizeReturnTest()
+        public void OptimizeReturn()
         {
             for (int i = -1; i <= 9; i++)
             {

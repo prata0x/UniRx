@@ -88,7 +88,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void SubjectSubscribeTest()
+        public void SubjectSubscribe()
         {
             var subject = new Subject<int>();
             var listA = new List<int>();
@@ -154,7 +154,7 @@ namespace UniRx.Tests
         }
 
         [Test]
-        public void AsyncSubjectTest()
+        public void AsyncSubject()
         {
             // OnCompletedPattern
             {
