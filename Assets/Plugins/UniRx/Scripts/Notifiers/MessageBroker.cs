@@ -52,7 +52,17 @@ namespace UniRx
         /// <summary>
         /// MessageBroker in Global scope.
         /// </summary>
-        public static readonly IMessageBroker Default = new MessageBroker();
+        public static IMessageBroker Default => @default;
+        private static IMessageBroker @default = new MessageBroker();
+
+#if UNITY_2019_3_OR_NEWER && UNITY_EDITOR
+        // Clean up static properties for times when Domain Reload is disabled.
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void DomainCleanup()
+        {
+            @default = new MessageBroker();
+        }
+#endif
 
         bool isDisposed = false;
         readonly Dictionary<Type, object> notifiers = new Dictionary<Type, object>();
@@ -111,7 +121,17 @@ namespace UniRx
         /// <summary>
         /// AsyncMessageBroker in Global scope.
         /// </summary>
-        public static readonly IAsyncMessageBroker Default = new AsyncMessageBroker();
+        public static IAsyncMessageBroker Default => @default;
+        private static IAsyncMessageBroker @default = new AsyncMessageBroker();
+
+#if UNITY_2019_3_OR_NEWER && UNITY_EDITOR
+        // Clean up static properties for times when Domain Reload is disabled.
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void DomainCleanup()
+        {
+            @default = new AsyncMessageBroker();
+        }
+#endif
 
         bool isDisposed = false;
         readonly Dictionary<Type, object> notifiers = new Dictionary<Type, object>();
