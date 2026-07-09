@@ -30,7 +30,7 @@ jobs:
           unityVersion: ${{ matrix.unity-version }}
           targetPlatform: StandaloneLinux64
           buildMethod: UnitTestBuilder.BuildUnitTest
-          customParameters: -ScriptBackend Mono2x -Headless -BuildTarget StandaloneLinux64
+          customParameters: -ScriptBackend Mono2x -BuildTarget StandaloneLinux64
           runAsHostUser: true
 
       - name: Run tests
