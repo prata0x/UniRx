@@ -27,6 +27,7 @@ jobs:
           targetPlatform: StandaloneLinux64
           buildMethod: UnitTestBuilder.BuildUnitTest
           customParameters: -ScriptBackend Mono2x -Headless -BuildTarget StandaloneLinux64
+          runAsHostUser: true
 
       - name: Run tests
         run: |
