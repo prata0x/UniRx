@@ -385,7 +385,7 @@ public static partial class UnitTestBuilder
 
     static void Build(string sceneName, string buildPath, RuntimeUnitTestSettings settings)
     {
-        var options = BuildOptions.BuildScriptsOnly | BuildOptions.IncludeTestAssemblies;
+        var options = BuildOptions.IncludeTestAssemblies;
         if (settings.AutoRunPlayer)
         {
             options |= BuildOptions.AutoRunPlayer;
