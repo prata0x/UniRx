@@ -463,6 +463,92 @@ namespace UniRx
             return FromCoroutine<T>((observer, cancellationToken) => WrapEnumeratorYieldValue<T>(coroutine(cancellationToken), observer, cancellationToken, nullAsNextUpdate));
         }
 
+        // Recursively wraps a nested plain IEnumerator so exceptions thrown inside it reach
+        // onError instead of being silently swallowed by Unity's native nested coroutine execution.
+        // Unlike WrapEnumerator, it never forwards yielded values as OnNext(T) -- callers of
+        // WrapEnumeratorYieldValue<T> never converted nested-enumerator content into T values either,
+        // and IObserver<T>'s contravariance rules out reusing WrapEnumerator's IObserver<Unit>-sharing approach here.
+        static IEnumerator WrapEnumeratorForErrorPropagation(IEnumerator enumerator, Action<Exception> onError, CancellationToken cancellationToken)
+        {
+            // Shared across every recursion level for this dispatch, so an error raised several
+            // nesting levels down stops each ancestor level's own loop too, instead of only the
+            // level that directly observed the exception.
+            return WrapEnumeratorForErrorPropagation(enumerator, onError, cancellationToken, new bool[1]);
+        }
+
+        static IEnumerator WrapEnumeratorForErrorPropagation(IEnumerator enumerator, Action<Exception> onError, CancellationToken cancellationToken, bool[] raisedError)
+        {
+            var hasNext = default(bool);
+            try
+            {
+                do
+                {
+                    try
+                    {
+                        hasNext = enumerator.MoveNext();
+                    }
+                    catch (Exception ex)
+                    {
+                        raisedError[0] = true;
+                        onError(ex);
+                        yield break;
+                    }
+
+                    if (hasNext)
+                    {
+#if SupportCustomYieldInstruction
+                        var current = enumerator.Current;
+                        var customHandler = current as ICustomYieldInstructionErrorHandler;
+                        if (customHandler != null && customHandler.IsReThrowOnError)
+                        {
+                            customHandler.ForceDisableRethrowOnError();
+                            try
+                            {
+                                yield return current;
+                            }
+                            finally
+                            {
+                                customHandler.ForceEnableRethrowOnError();
+                            }
+
+                            if (customHandler.HasError)
+                            {
+                                raisedError[0] = true;
+                                onError(customHandler.Error);
+                                yield break;
+                            }
+                        }
+                        else if (current is IEnumerator)
+                        {
+                            yield return WrapEnumeratorForErrorPropagation(current as IEnumerator, onError, cancellationToken, raisedError);
+                        }
+                        else
+                        {
+                            yield return current;
+                        }
+#else
+                        if (enumerator.Current is IEnumerator)
+                        {
+                            yield return WrapEnumeratorForErrorPropagation(enumerator.Current as IEnumerator, onError, cancellationToken, raisedError);
+                        }
+                        else
+                        {
+                            yield return enumerator.Current;
+                        }
+#endif
+                    }
+                } while (hasNext && !raisedError[0] && !cancellationToken.IsCancellationRequested);
+            }
+            finally
+            {
+                var d = enumerator as IDisposable;
+                if (d != null)
+                {
+                    d.Dispose();
+                }
+            }
+        }
+
         static IEnumerator WrapEnumeratorYieldValue<T>(IEnumerator enumerator, IObserver<T> observer, CancellationToken cancellationToken, bool nullAsNextUpdate)
         {
             var hasNext = default(bool);
@@ -532,7 +618,14 @@ namespace UniRx
                         }
                         else
                         {
-                            yield return current;
+                            // Don't delegate to Unity's native nested coroutine execution directly;
+                            // it silently swallows exceptions thrown inside the nested IEnumerator,
+                            // so wrap it to propagate the error to the observer instead.
+                            yield return WrapEnumeratorForErrorPropagation(current as IEnumerator, ex =>
+                            {
+                                raisedError = true;
+                                observer.OnError(ex);
+                            }, cancellationToken);
                         }
                     }
 #endif
@@ -557,7 +650,7 @@ namespace UniRx
                         }
                     }
                 }
-            } while (hasNext && !cancellationToken.IsCancellationRequested);
+            } while (hasNext && !raisedError && !cancellationToken.IsCancellationRequested);
 
             try
             {
