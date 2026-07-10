@@ -139,6 +139,15 @@ namespace UniRx
             inner = innerDictionary;
         }
 
+        /// <summary>
+        /// Checks whether the internal dictionary is null, e.g. after deserialization paths
+        /// (such as Unity's own serialization system) that bypass the constructors above.
+        /// </summary>
+        public bool IsNull()
+        {
+            return inner == null;
+        }
+
         public TValue this[TKey key]
         {
             get
