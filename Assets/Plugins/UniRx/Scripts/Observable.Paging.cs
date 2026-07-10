@@ -234,21 +234,41 @@ namespace UniRx
 
         public static IObservable<T> First<T>(this IObservable<T> source)
         {
-            return new FirstObservable<T>(source, false);
+            return new FirstObservable<T>(source, true, false);
         }
         public static IObservable<T> First<T>(this IObservable<T> source, Func<T, bool> predicate)
         {
-            return new FirstObservable<T>(source, predicate, false);
+            return new FirstObservable<T>(source, predicate, true, false);
         }
 
         public static IObservable<T> FirstOrDefault<T>(this IObservable<T> source)
         {
-            return new FirstObservable<T>(source, true);
+            return new FirstObservable<T>(source, false, true);
         }
 
         public static IObservable<T> FirstOrDefault<T>(this IObservable<T> source, Func<T, bool> predicate)
         {
-            return new FirstObservable<T>(source, predicate, true);
+            return new FirstObservable<T>(source, predicate, false, true);
+        }
+
+        /// <summary>
+        /// Returns the first element of the sequence, or completes without emitting a value if
+        /// the sequence is empty. Unlike First (which errors) or FirstOrDefault (which emits
+        /// default(T)) on an empty sequence.
+        /// </summary>
+        public static IObservable<T> FirstOrEmpty<T>(this IObservable<T> source)
+        {
+            return new FirstObservable<T>(source, false, false);
+        }
+
+        /// <summary>
+        /// Returns the first element of the sequence that satisfies the predicate, or completes
+        /// without emitting a value if no element satisfies it. Unlike First (which errors) or
+        /// FirstOrDefault (which emits default(T)) when no element satisfies the predicate.
+        /// </summary>
+        public static IObservable<T> FirstOrEmpty<T>(this IObservable<T> source, Func<T, bool> predicate)
+        {
+            return new FirstObservable<T>(source, predicate, false, false);
         }
 
         public static IObservable<T> Single<T>(this IObservable<T> source)
