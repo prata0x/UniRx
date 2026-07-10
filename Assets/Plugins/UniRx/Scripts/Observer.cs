@@ -429,6 +429,28 @@ namespace UniRx
             return source.Subscribe(Observer.CreateSubscribeObserver(onNext, onError, onCompleted));
         }
 
+#if CSHARP_7_OR_LATER || (UNITY_2018_3_OR_NEWER && (NET_STANDARD_2_0 || NET_STANDARD_2_1 || NET_4_6))
+        public static IDisposable Subscribe<T1, T2>(this IObservable<(T1, T2)> source, Action<T1, T2> onNext)
+        {
+            return source.Subscribe(Observer.CreateSubscribeObserver<(T1, T2)>(t => onNext(t.Item1, t.Item2), Stubs.Throw, Stubs.Nop));
+        }
+
+        public static IDisposable Subscribe<T1, T2>(this IObservable<(T1, T2)> source, Action<T1, T2> onNext, Action<Exception> onError)
+        {
+            return source.Subscribe(Observer.CreateSubscribeObserver<(T1, T2)>(t => onNext(t.Item1, t.Item2), onError, Stubs.Nop));
+        }
+
+        public static IDisposable Subscribe<T1, T2>(this IObservable<(T1, T2)> source, Action<T1, T2> onNext, Action onCompleted)
+        {
+            return source.Subscribe(Observer.CreateSubscribeObserver<(T1, T2)>(t => onNext(t.Item1, t.Item2), Stubs.Throw, onCompleted));
+        }
+
+        public static IDisposable Subscribe<T1, T2>(this IObservable<(T1, T2)> source, Action<T1, T2> onNext, Action<Exception> onError, Action onCompleted)
+        {
+            return source.Subscribe(Observer.CreateSubscribeObserver<(T1, T2)>(t => onNext(t.Item1, t.Item2), onError, onCompleted));
+        }
+#endif
+
         public static IDisposable SubscribeWithState<T, TState>(this IObservable<T> source, TState state, Action<T, TState> onNext)
         {
             return source.Subscribe(Observer.CreateSubscribeWithStateObserver(state, onNext, Stubs<TState>.Throw, Stubs<TState>.Ignore));
