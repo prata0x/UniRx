@@ -1,4 +1,4 @@
-﻿#if (NET_4_6 || NET_STANDARD_2_0)
+﻿#if (NET_4_6 || NET_STANDARD_2_0 || NET_STANDARD_2_1)
 
 using System;
 using System.Collections;
@@ -91,7 +91,7 @@ namespace UniRx
             return CoroutineAsyncBridge.Start(coroutine);
         }
 
-#if !(CSHARP_7_OR_LATER || (UNITY_2018_3_OR_NEWER && (NET_STANDARD_2_0 || NET_4_6)))
+#if !(CSHARP_7_OR_LATER || (UNITY_2018_3_OR_NEWER && (NET_STANDARD_2_0 || NET_STANDARD_2_1 || NET_4_6)))
 
         // should use UniRx.Async in C# 7.0
 

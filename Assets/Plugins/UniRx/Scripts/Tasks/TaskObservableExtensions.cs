@@ -1,6 +1,6 @@
 ﻿// this code is borrowed from RxOfficial(rx.codeplex.com) and modified
 
-#if (NET_4_6 || NET_STANDARD_2_0)
+#if (NET_4_6 || NET_STANDARD_2_0 || NET_STANDARD_2_1)
 
 using System;
 using System.Threading.Tasks;

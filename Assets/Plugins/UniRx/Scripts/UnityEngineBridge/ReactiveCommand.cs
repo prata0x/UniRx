@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 
-#if CSHARP_7_OR_LATER || (UNITY_2018_3_OR_NEWER && (NET_STANDARD_2_0 || NET_4_6))
+#if CSHARP_7_OR_LATER || (UNITY_2018_3_OR_NEWER && (NET_STANDARD_2_0 || NET_STANDARD_2_1 || NET_4_6))
 using System.Threading.Tasks;
 using UniRx.InternalUtil;
 #endif
@@ -322,7 +322,7 @@ namespace UniRx
             return new ReactiveCommand<T>(canExecuteSource, initialValue);
         }
 
-#if CSHARP_7_OR_LATER || (UNITY_2018_3_OR_NEWER && (NET_STANDARD_2_0 || NET_4_6))
+#if CSHARP_7_OR_LATER || (UNITY_2018_3_OR_NEWER && (NET_STANDARD_2_0 || NET_STANDARD_2_1 || NET_4_6))
 
         static readonly Action<object> Callback = CancelCallback;
 
@@ -408,7 +408,7 @@ namespace UniRx
             return new AsyncReactiveCommand<T>(sharedCanExecuteSource);
         }
 
-#if CSHARP_7_OR_LATER || (UNITY_2018_3_OR_NEWER && (NET_STANDARD_2_0 || NET_4_6))
+#if CSHARP_7_OR_LATER || (UNITY_2018_3_OR_NEWER && (NET_STANDARD_2_0 || NET_STANDARD_2_1 || NET_4_6))
 
         static readonly Action<object> Callback = CancelCallback;
 
