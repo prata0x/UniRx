@@ -1,0 +1,45 @@
+name: Unity Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Unity ${{ matrix.unity-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        unity-version:
+          - 2019.4.41f2
+          - 2020.3.49f1
+          - 2021.3.45f2
+          - 2022.3.62f3
+          - 6000.0.79f1
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: game-ci/unity-builder@d829bfc901f2347c8fe18898f06712b66916ef42 # v5
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: ${{ matrix.unity-version }}
+          targetPlatform: StandaloneLinux64
+          buildMethod: UnitTestBuilder.BuildUnitTest
+          customParameters: -ScriptBackend Mono2x -Headless -BuildTarget StandaloneLinux64
+          runAsHostUser: true
+
+      - name: Run tests
+        run: |
+          chmod +x ./bin/UnitTest/StandaloneLinux64_Mono2x/test
+          ./bin/UnitTest/StandaloneLinux64_Mono2x/test
