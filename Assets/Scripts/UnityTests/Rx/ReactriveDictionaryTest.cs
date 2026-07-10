@@ -65,4 +65,19 @@ namespace UniRx.Tests
     //        count.Is(-1); // not fired
     //    }
     //}
+
+    public class ReactiveDictionaryIsNullTest
+    {
+        [Test]
+        public void IsNullReturnsFalseForConstructedDictionary()
+        {
+            new ReactiveDictionary<string, int>().IsNull().IsFalse();
+        }
+
+        [Test]
+        public void IsNullReturnsTrueWhenInnerDictionaryIsNull()
+        {
+            new ReactiveDictionary<string, int>((Dictionary<string, int>)null).IsNull().IsTrue();
+        }
+    }
 }
