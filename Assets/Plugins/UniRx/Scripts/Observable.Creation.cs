@@ -371,5 +371,188 @@ namespace UniRx
                 return subject.AsObservable();
             };
         }
+
+        public static Func<T1, T2, IObservable<TResult>> ToAsync<T1, T2, TResult>(Func<T1, T2, TResult> function)
+        {
+            return ToAsync(function, Scheduler.DefaultSchedulers.AsyncConversions);
+        }
+
+        public static Func<T1, T2, IObservable<TResult>> ToAsync<T1, T2, TResult>(Func<T1, T2, TResult> function, IScheduler scheduler)
+        {
+            return (arg1, arg2) =>
+            {
+                var subject = new AsyncSubject<TResult>();
+
+                scheduler.Schedule(() =>
+                {
+                    var result = default(TResult);
+                    try
+                    {
+                        result = function(arg1, arg2);
+                    }
+                    catch (Exception exception)
+                    {
+                        subject.OnError(exception);
+                        return;
+                    }
+                    subject.OnNext(result);
+                    subject.OnCompleted();
+                });
+
+                return subject.AsObservable();
+            };
+        }
+
+        public static Func<T1, T2, T3, IObservable<TResult>> ToAsync<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> function)
+        {
+            return ToAsync(function, Scheduler.DefaultSchedulers.AsyncConversions);
+        }
+
+        public static Func<T1, T2, T3, IObservable<TResult>> ToAsync<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> function, IScheduler scheduler)
+        {
+            return (arg1, arg2, arg3) =>
+            {
+                var subject = new AsyncSubject<TResult>();
+
+                scheduler.Schedule(() =>
+                {
+                    var result = default(TResult);
+                    try
+                    {
+                        result = function(arg1, arg2, arg3);
+                    }
+                    catch (Exception exception)
+                    {
+                        subject.OnError(exception);
+                        return;
+                    }
+                    subject.OnNext(result);
+                    subject.OnCompleted();
+                });
+
+                return subject.AsObservable();
+            };
+        }
+
+        public static Func<T1, T2, T3, T4, IObservable<TResult>> ToAsync<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> function)
+        {
+            return ToAsync(function, Scheduler.DefaultSchedulers.AsyncConversions);
+        }
+
+        public static Func<T1, T2, T3, T4, IObservable<TResult>> ToAsync<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> function, IScheduler scheduler)
+        {
+            return (arg1, arg2, arg3, arg4) =>
+            {
+                var subject = new AsyncSubject<TResult>();
+
+                scheduler.Schedule(() =>
+                {
+                    var result = default(TResult);
+                    try
+                    {
+                        result = function(arg1, arg2, arg3, arg4);
+                    }
+                    catch (Exception exception)
+                    {
+                        subject.OnError(exception);
+                        return;
+                    }
+                    subject.OnNext(result);
+                    subject.OnCompleted();
+                });
+
+                return subject.AsObservable();
+            };
+        }
+
+        public static Func<T1, T2, IObservable<Unit>> ToAsync<T1, T2>(Action<T1, T2> action)
+        {
+            return ToAsync(action, Scheduler.DefaultSchedulers.AsyncConversions);
+        }
+
+        public static Func<T1, T2, IObservable<Unit>> ToAsync<T1, T2>(Action<T1, T2> action, IScheduler scheduler)
+        {
+            return (arg1, arg2) =>
+            {
+                var subject = new AsyncSubject<Unit>();
+
+                scheduler.Schedule(() =>
+                {
+                    try
+                    {
+                        action(arg1, arg2);
+                    }
+                    catch (Exception exception)
+                    {
+                        subject.OnError(exception);
+                        return;
+                    }
+                    subject.OnNext(Unit.Default);
+                    subject.OnCompleted();
+                });
+
+                return subject.AsObservable();
+            };
+        }
+
+        public static Func<T1, T2, T3, IObservable<Unit>> ToAsync<T1, T2, T3>(Action<T1, T2, T3> action)
+        {
+            return ToAsync(action, Scheduler.DefaultSchedulers.AsyncConversions);
+        }
+
+        public static Func<T1, T2, T3, IObservable<Unit>> ToAsync<T1, T2, T3>(Action<T1, T2, T3> action, IScheduler scheduler)
+        {
+            return (arg1, arg2, arg3) =>
+            {
+                var subject = new AsyncSubject<Unit>();
+
+                scheduler.Schedule(() =>
+                {
+                    try
+                    {
+                        action(arg1, arg2, arg3);
+                    }
+                    catch (Exception exception)
+                    {
+                        subject.OnError(exception);
+                        return;
+                    }
+                    subject.OnNext(Unit.Default);
+                    subject.OnCompleted();
+                });
+
+                return subject.AsObservable();
+            };
+        }
+
+        public static Func<T1, T2, T3, T4, IObservable<Unit>> ToAsync<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action)
+        {
+            return ToAsync(action, Scheduler.DefaultSchedulers.AsyncConversions);
+        }
+
+        public static Func<T1, T2, T3, T4, IObservable<Unit>> ToAsync<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action, IScheduler scheduler)
+        {
+            return (arg1, arg2, arg3, arg4) =>
+            {
+                var subject = new AsyncSubject<Unit>();
+
+                scheduler.Schedule(() =>
+                {
+                    try
+                    {
+                        action(arg1, arg2, arg3, arg4);
+                    }
+                    catch (Exception exception)
+                    {
+                        subject.OnError(exception);
+                        return;
+                    }
+                    subject.OnNext(Unit.Default);
+                    subject.OnCompleted();
+                });
+
+                return subject.AsObservable();
+            };
+        }
     }
 }
