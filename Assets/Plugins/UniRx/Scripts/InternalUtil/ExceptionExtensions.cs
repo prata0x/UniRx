@@ -6,7 +6,7 @@
 	{
 		public static void Throw(this Exception exception)
 		{
-#if (NET_4_6 || NET_STANDARD_2_0)
+#if (NET_4_6 || NET_STANDARD_2_0 || NET_STANDARD_2_1)
 			System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(exception).Throw();
 #endif
             throw exception;

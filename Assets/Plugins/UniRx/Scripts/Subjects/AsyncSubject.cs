@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UniRx.InternalUtil;
 
-#if (NET_4_6 || NET_STANDARD_2_0)
+#if (NET_4_6 || NET_STANDARD_2_0 || NET_STANDARD_2_1)
 using System.Runtime.CompilerServices;
 using System.Threading;
 #endif
@@ -10,7 +10,7 @@ using System.Threading;
 namespace UniRx
 {
     public sealed class AsyncSubject<T> : ISubject<T>, IOptimizedObservable<T>, IDisposable
-#if (NET_4_6 || NET_STANDARD_2_0)
+#if (NET_4_6 || NET_STANDARD_2_0 || NET_STANDARD_2_1)
         , INotifyCompletion
 #endif
     {
@@ -226,7 +226,7 @@ namespace UniRx
         }
 
 
-#if (NET_4_6 || NET_STANDARD_2_0)
+#if (NET_4_6 || NET_STANDARD_2_0 || NET_STANDARD_2_1)
 
         /// <summary>
         /// Gets an awaitable object for the current AsyncSubject.
