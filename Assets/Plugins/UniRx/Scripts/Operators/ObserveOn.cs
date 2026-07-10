@@ -35,6 +35,7 @@ namespace UniRx.Operators
                 public Notification<T> data;
                 public LinkedListNode<SchedulableAction> node;
                 public IDisposable schedule;
+                public bool isRunning;
 
                 public void Dispose()
                 {
@@ -118,11 +119,21 @@ namespace UniRx.Operators
 
                     var action = actions.First.Value;
 
-                    if (action.IsScheduled)
+                    // action.schedule is only assigned once scheduler.Schedule(...) returns, so a
+                    // synchronous scheduler (e.g. Scheduler.Immediate) hasn't set it yet while its
+                    // callback below is still running. If that callback re-enters OnNext (e.g. the
+                    // observer publishes back into the same Subject), the re-entrant ProcessNext()
+                    // would otherwise see action.IsScheduled == false and reschedule the very same
+                    // action, recursing without bound. isRunning closes that gap.
+                    if (action.IsScheduled || action.isRunning)
                         return;
 
                     action.schedule = parent.scheduler.Schedule(() =>
                     {
+                        lock (actions)
+                        {
+                            action.isRunning = true;
+                        }
                         try
                         {
                             switch (action.data.Kind)
@@ -142,6 +153,7 @@ namespace UniRx.Operators
                         {
                             lock (actions)
                             {
+                                action.isRunning = false;
                                 action.Dispose();
                             }
 
