@@ -778,6 +778,9 @@
     <Compile Include="..\..\Assets\Plugins\UniRx\Scripts\UnityEngineBridge\Triggers\ObservableAnimatorTrigger.cs">
       <Link>UnityEngineBridge\Triggers\ObservableAnimatorTrigger.cs</Link>
     </Compile>
+    <Compile Include="..\..\Assets\Plugins\UniRx\Scripts\UnityEngineBridge\Triggers\ObservableAwakeTrigger.cs">
+      <Link>UnityEngineBridge\Triggers\ObservableAwakeTrigger.cs</Link>
+    </Compile>
     <Compile Include="..\..\Assets\Plugins\UniRx\Scripts\UnityEngineBridge\Triggers\ObservableBeginDragTrigger.cs">
       <Link>UnityEngineBridge\Triggers\ObservableBeginDragTrigger.cs</Link>
     </Compile>
