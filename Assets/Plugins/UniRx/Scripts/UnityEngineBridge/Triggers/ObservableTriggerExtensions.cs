@@ -269,6 +269,17 @@ namespace UniRx.Triggers
 
         #endregion
 
+        #region ObservableAwakeTrigger
+
+        /// <summary>Awake is called when the script instance is being loaded.</summary>
+        public static IObservable<Unit> AwakeAsObservable(this GameObject gameObject)
+        {
+            if (gameObject == null) return Observable.Empty<Unit>();
+            return GetOrAddComponent<ObservableAwakeTrigger>(gameObject).AwakeAsObservable();
+        }
+
+        #endregion
+
         #region ObservableVisibleTrigger
 
         /// <summary>OnBecameInvisible is called when the renderer is no longer visible by any camera.</summary>

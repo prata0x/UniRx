@@ -91,6 +91,17 @@ namespace UniRx.Triggers
 
         #endregion
 
+        #region ObservableJointTrigger
+
+        /// <summary>OnJointBreak is called when a joint attached to the same game object broke.</summary>
+        public static IObservable<float> OnJointBreakAsObservable(this Joint joint)
+        {
+            if (joint == null || joint.gameObject == null) return Observable.Empty<float>();
+            return GetOrAddComponent<ObservableJointTrigger>(joint.gameObject).OnJointBreakAsObservable();
+        }
+
+        #endregion
+
 #endif
 
         #region ObservableDestroyTrigger
