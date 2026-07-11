@@ -405,6 +405,9 @@
     <Compile Include="..\..\Assets\Plugins\UniRx\Scripts\Operators\RepeatSafe.cs">
       <Link>Operators\RepeatSafe.cs</Link>
     </Compile>
+    <Compile Include="..\..\Assets\Plugins\UniRx\Scripts\Operators\ResetAfter.cs">
+      <Link>Operators\ResetAfter.cs</Link>
+    </Compile>
     <Compile Include="..\..\Assets\Plugins\UniRx\Scripts\Operators\Return.cs">
       <Link>Operators\Return.cs</Link>
     </Compile>

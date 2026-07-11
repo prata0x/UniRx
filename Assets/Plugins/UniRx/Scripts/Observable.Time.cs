@@ -136,5 +136,29 @@ namespace UniRx
         {
             return new TimeoutObservable<T>(source, dueTime, scheduler);
         }
+
+        /// <summary>
+        /// Publishes defaultValue if dueTime elapses without a new value arriving since the last one.
+        /// </summary>
+        public static IObservable<TSource> ResetAfter<TSource>(this IObservable<TSource> source, TSource defaultValue, TimeSpan dueTime, IScheduler scheduler)
+        {
+            return new ResetAfterObservable<TSource>(source, defaultValue, dueTime, scheduler);
+        }
+
+        /// <summary>
+        /// Publishes defaultValue if dueTime elapses without a new value arriving since the last one.
+        /// </summary>
+        public static IObservable<TSource> ResetAfter<TSource>(this IObservable<TSource> source, TSource defaultValue, TimeSpan dueTime)
+        {
+            return source.ResetAfter(defaultValue, dueTime, Scheduler.DefaultSchedulers.TimeBasedOperations);
+        }
+
+        /// <summary>
+        /// Publishes default(TSource) if dueTime elapses without a new value arriving since the last one.
+        /// </summary>
+        public static IObservable<TSource> ResetAfter<TSource>(this IObservable<TSource> source, TimeSpan dueTime)
+        {
+            return source.ResetAfter(default(TSource), dueTime, Scheduler.DefaultSchedulers.TimeBasedOperations);
+        }
     }
 }
