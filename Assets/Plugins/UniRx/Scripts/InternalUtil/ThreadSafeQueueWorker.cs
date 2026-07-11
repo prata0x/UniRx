@@ -63,6 +63,38 @@ namespace UniRx.InternalUtil
             }
         }
 
+        /// <summary>
+        /// Removes every not-yet-executed entry queued with the given state (reference-compared),
+        /// including one already promoted into actionList mid-ExecuteAll but not yet reached by its
+        /// iteration index. Only closes the race for a caller on the same thread as ExecuteAll.
+        /// </summary>
+        public void RemoveActionByState(object state)
+        {
+            lock (gate)
+            {
+                for (int i = 0; i < actionListCount; i++)
+                {
+                    if (actionStates[i] == state)
+                    {
+                        actionList[i] = null;
+                        actionStates[i] = null;
+                    }
+                }
+
+                if (dequing)
+                {
+                    for (int i = 0; i < waitingListCount; i++)
+                    {
+                        if (waitingStates[i] == state)
+                        {
+                            waitingList[i] = null;
+                            waitingStates[i] = null;
+                        }
+                    }
+                }
+            }
+        }
+
         public void ExecuteAll(Action<Exception> unhandledExceptionCallback)
         {
             lock (gate)
@@ -78,7 +110,10 @@ namespace UniRx.InternalUtil
                 var state = actionStates[i];
                 try
                 {
-                    action(state);
+                    if (action != null)
+                    {
+                        action(state);
+                    }
                 }
                 catch (Exception ex)
                 {
