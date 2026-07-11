@@ -62,6 +62,9 @@ namespace UniRx
 
             ThreadSafeQueueWorker editorQueueWorker = new ThreadSafeQueueWorker();
 
+            object routineIdMapGate = new object();
+            Dictionary<IEnumerator, object> routineIdMap = new Dictionary<IEnumerator, object>();
+
             EditorThreadDispatcher()
             {
                 UnityEditor.EditorApplication.update += Update;
@@ -98,7 +101,34 @@ namespace UniRx
 
             public void PseudoStartCoroutine(IEnumerator routine)
             {
-                editorQueueWorker.Enqueue(_ => ConsumeEnumerator(routine), null);
+                var routineId = new object();
+                lock (routineIdMapGate)
+                {
+                    routineIdMap[routine] = routineId;
+                }
+                editorQueueWorker.Enqueue(_ => ConsumeEnumerator(routine, routine, routineId), routineId);
+            }
+
+            /// <summary>
+            /// Stops a coroutine previously started via PseudoStartCoroutine, matched by the same
+            /// IEnumerator reference (mirrors MonoBehaviour.StartCoroutine/StopCoroutine's own
+            /// reference-based matching). Coroutines started via StartUpdateMicroCoroutine and its
+            /// FixedUpdate/EndOfFrame siblings don't go through this path and can't be stopped here.
+            /// No-ops (does not throw) for an unknown or already-finished routine, matching Unity's
+            /// own StopCoroutine behavior.
+            /// </summary>
+            public void PseudoStopCoroutine(IEnumerator routine)
+            {
+                object routineId;
+                lock (routineIdMapGate)
+                {
+                    if (!routineIdMap.TryGetValue(routine, out routineId))
+                    {
+                        return;
+                    }
+                    routineIdMap.Remove(routine);
+                }
+                editorQueueWorker.RemoveActionByState(routineId);
             }
 
             void Update()
@@ -106,9 +136,27 @@ namespace UniRx
                 editorQueueWorker.ExecuteAll(x => Debug.LogException(x));
             }
 
-            void ConsumeEnumerator(IEnumerator routine)
+            void ConsumeEnumerator(IEnumerator routine, IEnumerator rootRoutine, object routineId)
             {
-                if (routine.MoveNext())
+                bool hasNext;
+                try
+                {
+                    hasNext = routine.MoveNext();
+                }
+                catch
+                {
+                    // Unconditional unlike the natural-completion branch below: a throw can surface
+                    // here with `routine` bound to an inner Unwrap* wrapper rather than rootRoutine,
+                    // but it always means rootRoutine's whole chain is dead (Remove is a no-op if
+                    // an inner frame already removed it).
+                    lock (routineIdMapGate)
+                    {
+                        routineIdMap.Remove(rootRoutine);
+                    }
+                    throw;
+                }
+
+                if (hasNext)
                 {
                     var current = routine.Current;
                     if (current == null)
@@ -124,7 +172,7 @@ namespace UniRx
                     if (type == typeof(WWW))
                     {
                         var www = (WWW)current;
-                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapWaitWWW(www, routine)), null);
+                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapWaitWWW(www, routine, rootRoutine, routineId), rootRoutine, routineId), routineId);
                         return;
                     }
                     else
@@ -135,7 +183,7 @@ namespace UniRx
                     if (typeof(AsyncOperation).IsAssignableFrom(type))
                     {
                         var asyncOperation = (AsyncOperation)current;
-                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapWaitAsyncOperation(asyncOperation, routine)), null);
+                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapWaitAsyncOperation(asyncOperation, routine, rootRoutine, routineId), rootRoutine, routineId), routineId);
                         return;
                     }
                     else if (type == typeof(WaitForSeconds))
@@ -143,7 +191,7 @@ namespace UniRx
                         var waitForSeconds = (WaitForSeconds)current;
                         var accessor = typeof(WaitForSeconds).GetField("m_Seconds", BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic);
                         var second = (float)accessor.GetValue(waitForSeconds);
-                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapWaitForSeconds(second, routine)), null);
+                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapWaitForSeconds(second, routine, rootRoutine, routineId), rootRoutine, routineId), routineId);
                         return;
                     }
                     else if (type == typeof(Coroutine))
@@ -155,13 +203,22 @@ namespace UniRx
                     else if (current is IEnumerator)
                     {
                         var enumerator = (IEnumerator)current;
-                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapEnumerator(enumerator, routine)), null);
+                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapEnumerator(enumerator, routine, rootRoutine, routineId), rootRoutine, routineId), routineId);
                         return;
                     }
 #endif
 
                     ENQUEUE:
-                    editorQueueWorker.Enqueue(_ => ConsumeEnumerator(routine), null); // next update
+                    editorQueueWorker.Enqueue(_ => ConsumeEnumerator(routine, rootRoutine, routineId), routineId); // next update
+                }
+                else if (ReferenceEquals(routine, rootRoutine))
+                {
+                    // the whole coroutine (not just an internal wait-unwrapper) has no more steps;
+                    // nothing further will ever be enqueued under this routineId
+                    lock (routineIdMapGate)
+                    {
+                        routineIdMap.Remove(rootRoutine);
+                    }
                 }
             }
 
@@ -169,29 +226,29 @@ namespace UniRx
 #if UNITY_2018_3_OR_NEWER
 #pragma warning disable CS0618
 #endif
-            IEnumerator UnwrapWaitWWW(WWW www, IEnumerator continuation)
+            IEnumerator UnwrapWaitWWW(WWW www, IEnumerator continuation, IEnumerator rootRoutine, object routineId)
             {
                 while (!www.isDone)
                 {
                     yield return null;
                 }
-                ConsumeEnumerator(continuation);
+                ConsumeEnumerator(continuation, rootRoutine, routineId);
             }
 #if UNITY_2018_3_OR_NEWER
 #pragma warning restore CS0618
 #endif
 #endif
 
-            IEnumerator UnwrapWaitAsyncOperation(AsyncOperation asyncOperation, IEnumerator continuation)
+            IEnumerator UnwrapWaitAsyncOperation(AsyncOperation asyncOperation, IEnumerator continuation, IEnumerator rootRoutine, object routineId)
             {
                 while (!asyncOperation.isDone)
                 {
                     yield return null;
                 }
-                ConsumeEnumerator(continuation);
+                ConsumeEnumerator(continuation, rootRoutine, routineId);
             }
 
-            IEnumerator UnwrapWaitForSeconds(float second, IEnumerator continuation)
+            IEnumerator UnwrapWaitForSeconds(float second, IEnumerator continuation, IEnumerator rootRoutine, object routineId)
             {
                 var startTime = DateTimeOffset.UtcNow;
                 while (true)
@@ -204,16 +261,16 @@ namespace UniRx
                         break;
                     }
                 };
-                ConsumeEnumerator(continuation);
+                ConsumeEnumerator(continuation, rootRoutine, routineId);
             }
 
-            IEnumerator UnwrapEnumerator(IEnumerator enumerator, IEnumerator continuation)
+            IEnumerator UnwrapEnumerator(IEnumerator enumerator, IEnumerator continuation, IEnumerator rootRoutine, object routineId)
             {
                 while (enumerator.MoveNext())
                 {
                     yield return null;
                 }
-                ConsumeEnumerator(continuation);
+                ConsumeEnumerator(continuation, rootRoutine, routineId);
             }
         }
 
@@ -386,6 +443,29 @@ namespace UniRx
             else
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Stops a coroutine previously started via StartCoroutine/SendStartCoroutine, matched by the
+        /// same IEnumerator reference (mirrors MonoBehaviour.StopCoroutine's own reference-based
+        /// matching). Coroutines started via StartUpdateMicroCoroutine and its FixedUpdate/EndOfFrame
+        /// siblings run on a separate dispatch path and can't be stopped through this method.
+        /// If SendStartCoroutine was called from a non-main thread, its actual StartCoroutine call is
+        /// deferred to a later frame; calling StopCoroutine with the same routine before that deferred
+        /// call runs is a no-op (the routine isn't registered yet) and the deferred start will still
+        /// go on to run.
+        /// </summary>
+        new public static void StopCoroutine(IEnumerator routine)
+        {
+#if UNITY_EDITOR
+            if (!ScenePlaybackDetector.IsPlaying) { EditorThreadDispatcher.Instance.PseudoStopCoroutine(routine); return; }
+#endif
+
+            var dispatcher = Instance;
+            if (dispatcher != null)
+            {
+                (dispatcher as MonoBehaviour).StopCoroutine(routine);
             }
         }
 

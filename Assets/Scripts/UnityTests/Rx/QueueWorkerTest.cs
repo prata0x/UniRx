@@ -86,5 +86,27 @@ namespace UniRx.Tests
             q.ExecuteAll(ex => { });
             l.Count.Is(0);
         }
+
+        [Test]
+        public void RemoveActionByStateDuringDequing()
+        {
+            var q = new UniRx.InternalUtil.ThreadSafeQueueWorker();
+            var l = new List<int>();
+            var target = new object();
+
+            q.Enqueue(_ => l.Add(1), null);
+            q.Enqueue(_ =>
+            {
+                l.Add(2);
+                q.RemoveActionByState(target); // removes entry 3, still unreached in this same pass
+            }, null);
+            q.Enqueue(_ => l.Add(3), target);
+
+            Exception caught = null;
+            q.ExecuteAll(ex => caught = ex);
+
+            l.Is(1, 2);
+            caught.IsNull();
+        }
     }
 }
