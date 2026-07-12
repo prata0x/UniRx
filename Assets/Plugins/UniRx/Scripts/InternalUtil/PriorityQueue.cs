@@ -88,7 +88,11 @@ namespace UniRx.InternalUtil
         {
             _items[index] = _items[--_size];
             _items[_size] = default(IndexedItem);
-            Heapify();
+            // The element moved into `index` came from the end of the array, so it may need to
+            // move either down (Heapify) or up (Percolate) to restore the heap invariant at this
+            // position -- unlike Dequeue()'s index 0, this is not guaranteed to only need Heapify.
+            Heapify(index);
+            Percolate(index);
             if (_size < _items.Length / 4)
             {
                 var temp = _items;
