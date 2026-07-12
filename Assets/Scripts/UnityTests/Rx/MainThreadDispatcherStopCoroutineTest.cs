@@ -80,10 +80,14 @@ namespace UniRx.Tests
             isMainThreadOnBackgroundThread.Value.IsFalse();
         }
 
-        // DIAGNOSTIC (temporary): checks whether SendStartCoroutine's deferred registration actually
-        // runs the routine at all (without ever calling StopCoroutine), to isolate whether a failure
-        // in the real regression test comes from the deferred-start mechanism itself versus from
-        // StopCoroutine's interaction with it.
+        const int DiagnosticFrameMargin = 10;
+
+        // DIAGNOSTIC (temporary, control case): checks whether SendStartCoroutine's deferred
+        // registration actually runs the routine at all (without ever calling StopCoroutine), with
+        // the same frame margin as the StopCoroutine case below so the two differ by exactly one
+        // variable (the StopCoroutine call). ThreadSafeQueueWorker.Enqueue can land an item in
+        // waitingList (not promoted to actionList until the next ExecuteAll) if the background thread
+        // races an in-flight dequeue, so a generous margin avoids a frame-count false negative.
         [UnityTest]
         public IEnumerator Diagnostic_SendStartCoroutineFromOtherThread_EventuallyRunsWithoutStop()
         {
@@ -95,9 +99,10 @@ namespace UniRx.Tests
             thread.Start();
             thread.Join();
 
-            yield return null;
-            yield return null;
-            yield return null;
+            for (var i = 0; i < DiagnosticFrameMargin; i++)
+            {
+                yield return null;
+            }
 
             (steps > 0).IsTrue();
         }
@@ -106,6 +111,8 @@ namespace UniRx.Tests
         // onto MainThreadDispatcher's queue until the next Update(). This does not test general
         // thread-safety of StopCoroutine itself (which remains main-thread-only) - only that a
         // main-thread StopCoroutine call landing before that deferred start runs can still cancel it.
+        // Uses the same DiagnosticFrameMargin as the control case above so StopCoroutine is the only
+        // variable that differs between the two.
         [UnityTest]
         public IEnumerator StopCoroutine_CancelsPendingSendStartCoroutineFromOtherThread()
         {
@@ -119,8 +126,10 @@ namespace UniRx.Tests
 
             MainThreadDispatcher.StopCoroutine(routine); // no Update() has run yet, so the queued start is still pending
 
-            yield return null;
-            yield return null;
+            for (var i = 0; i < DiagnosticFrameMargin; i++)
+            {
+                yield return null;
+            }
 
             steps.Is(0);
         }
