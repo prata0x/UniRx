@@ -686,6 +686,7 @@ namespace UniRx
         static IEnumerator WrapToCancellableEnumerator<T>(IEnumerator enumerator, IObserver<T> observer, CancellationToken cancellationToken)
         {
             var hasNext = default(bool);
+            var raisedError = false;
             do
             {
                 try
@@ -709,8 +710,26 @@ namespace UniRx
                     yield break;
                 }
 
-                yield return enumerator.Current; // yield inner YieldInstruction
-            } while (hasNext && !cancellationToken.IsCancellationRequested);
+                if (hasNext)
+                {
+                    var current = enumerator.Current;
+                    if (current is IEnumerator)
+                    {
+                        // Don't delegate to Unity's native nested coroutine execution directly;
+                        // it silently swallows exceptions thrown inside the nested IEnumerator,
+                        // so wrap it to propagate the error to the observer instead.
+                        yield return WrapEnumeratorForErrorPropagation(current as IEnumerator, ex =>
+                        {
+                            raisedError = true;
+                            observer.OnError(ex);
+                        }, cancellationToken);
+                    }
+                    else
+                    {
+                        yield return current; // yield inner YieldInstruction
+                    }
+                }
+            } while (hasNext && !raisedError && !cancellationToken.IsCancellationRequested);
 
             {
                 var d = enumerator as IDisposable;
