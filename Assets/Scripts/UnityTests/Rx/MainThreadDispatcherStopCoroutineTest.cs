@@ -46,6 +46,24 @@ namespace UniRx.Tests
             Assert.DoesNotThrow(() => MainThreadDispatcher.StopCoroutine(CountingRoutine()));
         }
 
+        // DIAGNOSTIC (temporary): checks whether calling StopCoroutine on an IEnumerator that was
+        // never actually registered with Unity's coroutine engine disposes/terminates it anyway,
+        // which would make a later StartCoroutine(sameRoutine) silently do nothing regardless of
+        // any pending-registration fix.
+        [Test]
+        public void Diagnostic_StopCoroutine_OnNeverStartedRoutine_DoesNotDisposeIt()
+        {
+            steps = 0;
+            var routine = CountingRoutine();
+
+            MainThreadDispatcher.StopCoroutine(routine); // never started via StartCoroutine/SendStartCoroutine
+
+            var hasNext = routine.MoveNext();
+
+            hasNext.IsTrue();
+            steps.Is(1);
+        }
+
         // SendStartCoroutine called from a non-main thread defers its actual StartCoroutine call
         // onto MainThreadDispatcher's queue until the next Update(). This does not test general
         // thread-safety of StopCoroutine itself (which remains main-thread-only) - only that a
