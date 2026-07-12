@@ -40,7 +40,19 @@ namespace UniRx.Operators
                 cancelable = new SerialDisposable();
                 var subscription = parent.source.Subscribe(this);
 
-                return StableCompositeDisposable.Create(cancelable, subscription);
+                // Invalidates any reset already scheduled but not yet run when the subscriber
+                // unsubscribes -- otherwise a scheduler callback that already passed its own
+                // cancellation check (e.g. a ThreadPool-based scheduler) can still deliver
+                // defaultValue to the observer after this subscription was disposed.
+                return StableCompositeDisposable.Create(cancelable, subscription, Disposable.Create(InvalidatePendingReset));
+            }
+
+            void InvalidatePendingReset()
+            {
+                lock (gate)
+                {
+                    id = unchecked(id + 1);
+                }
             }
 
             void OnNextReset(ulong currentid)

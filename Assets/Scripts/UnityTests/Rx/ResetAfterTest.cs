@@ -139,5 +139,22 @@ namespace UniRx.Tests
 
             received.Is(1, 2, -1);
         }
+
+        [Test]
+        public void StaleResetDoesNotPublishAfterSubscriberUnsubscribes_EvenWhenCancellationFailsToTakeEffect()
+        {
+            var scheduler = new NonCancelableScheduler();
+            var subject = new Subject<int>();
+            var received = new List<int>();
+
+            var subscription = subject.ResetAfter(-1, TimeSpan.FromSeconds(1), scheduler).Subscribe(received.Add);
+
+            subject.OnNext(1); // schedules a reset that this fake scheduler will never actually cancel
+            subscription.Dispose(); // subscriber unsubscribes before the scheduled reset runs
+
+            scheduler.RunAllPending(); // the stale reset callback still runs despite cancellation failing
+
+            received.Is(1); // no defaultValue delivered after unsubscribe
+        }
     }
 }
