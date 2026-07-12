@@ -64,6 +64,44 @@ namespace UniRx.Tests
             steps.Is(1);
         }
 
+        // DIAGNOSTIC (temporary): confirms mainThreadToken ([ThreadStatic]) actually reads as unset
+        // on a genuinely different OS thread, so SendStartCoroutine's non-main-thread branch is the
+        // one really being exercised below rather than silently falling through to the synchronous one.
+        [Test]
+        public void Diagnostic_IsInMainThread_FalseOnBackgroundThread()
+        {
+            MainThreadDispatcher.Initialize();
+            bool? isMainThreadOnBackgroundThread = null;
+            var thread = new Thread(() => { isMainThreadOnBackgroundThread = MainThreadDispatcher.IsInMainThread; });
+            thread.Start();
+            thread.Join();
+
+            isMainThreadOnBackgroundThread.HasValue.IsTrue();
+            isMainThreadOnBackgroundThread.Value.IsFalse();
+        }
+
+        // DIAGNOSTIC (temporary): checks whether SendStartCoroutine's deferred registration actually
+        // runs the routine at all (without ever calling StopCoroutine), to isolate whether a failure
+        // in the real regression test comes from the deferred-start mechanism itself versus from
+        // StopCoroutine's interaction with it.
+        [UnityTest]
+        public IEnumerator Diagnostic_SendStartCoroutineFromOtherThread_EventuallyRunsWithoutStop()
+        {
+            steps = 0;
+            MainThreadDispatcher.Initialize();
+
+            var routine = CountingRoutine();
+            var thread = new Thread(() => MainThreadDispatcher.SendStartCoroutine(routine));
+            thread.Start();
+            thread.Join();
+
+            yield return null;
+            yield return null;
+            yield return null;
+
+            (steps > 0).IsTrue();
+        }
+
         // SendStartCoroutine called from a non-main thread defers its actual StartCoroutine call
         // onto MainThreadDispatcher's queue until the next Update(). This does not test general
         // thread-safety of StopCoroutine itself (which remains main-thread-only) - only that a
