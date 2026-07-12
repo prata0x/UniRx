@@ -63,9 +63,19 @@ namespace UniRx.Tests
             MainThreadDispatcher.Initialize(); // force lazy-singleton init on the main thread first
 
             var routine = CountingRoutine();
-            var thread = new Thread(() => MainThreadDispatcher.SendStartCoroutine(routine));
+            bool? sendCalledFromMainThread = null;
+            var thread = new Thread(() =>
+            {
+                // mainThreadToken is [ThreadStatic]: Initialize() above only set it for this test
+                // method's own thread, so this read is independent and confirms SendStartCoroutine's
+                // deferred (non-main-thread) branch below is the one actually being exercised.
+                sendCalledFromMainThread = MainThreadDispatcher.IsInMainThread;
+                MainThreadDispatcher.SendStartCoroutine(routine);
+            });
             thread.Start();
             thread.Join(); // wait for the background thread's deferred-enqueue call to fully complete
+
+            sendCalledFromMainThread.Value.IsFalse();
 
             MainThreadDispatcher.StopCoroutine(routine); // no Update() has run yet, so the queued start is still pending
 

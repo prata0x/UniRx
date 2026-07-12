@@ -453,8 +453,8 @@ namespace UniRx
         /// siblings run on a separate dispatch path and can't be stopped through this method.
         /// If SendStartCoroutine was called from a non-main thread, its actual StartCoroutine call is
         /// deferred to a later frame; calling StopCoroutine with the same routine before that deferred
-        /// call runs is a no-op (the routine isn't registered yet) and the deferred start will still
-        /// go on to run.
+        /// call runs still prevents it from starting, since the underlying Unity engine refuses to
+        /// start a routine reference previously passed to StopCoroutine even if it was never running.
         /// </summary>
         new public static void StopCoroutine(IEnumerator routine)
         {
