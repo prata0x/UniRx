@@ -43,18 +43,35 @@ namespace UniRx.Operators
                 cancelable = new SerialDisposable();
                 var subscription = parent.source.Subscribe(this);
 
-                return StableCompositeDisposable.Create(cancelable, subscription);
+                // Invalidates any throttled value already scheduled but not yet delivered when
+                // the subscriber unsubscribes -- otherwise a scheduler callback that already
+                // passed its own cancellation check (e.g. a ThreadPool-based scheduler) can
+                // still deliver the pending value to the observer after this subscription was
+                // disposed.
+                return StableCompositeDisposable.Create(cancelable, subscription, Disposable.Create(InvalidatePendingValue));
+            }
+
+            void InvalidatePendingValue()
+            {
+                lock (gate)
+                {
+                    hasValue = false;
+                    id = unchecked(id + 1);
+                }
             }
 
             void OnNext(ulong currentid)
             {
                 lock (gate)
                 {
+                    // A stale callback (id != currentid) must not touch hasValue -- clearing it
+                    // unconditionally here would let a stale, superseded callback suppress the
+                    // delivery a later, still-current callback is about to make for a newer value.
                     if (hasValue && id == currentid)
                     {
                         observer.OnNext(latestValue);
+                        hasValue = false;
                     }
-                    hasValue = false;
                 }
             }
 
