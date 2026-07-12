@@ -1,10 +1,17 @@
 using System.Collections;
 using System.Threading;
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace UniRx.Tests
 {
+    // Plain, UniRx-independent MonoBehaviour used only to isolate whether Unity's own
+    // StartCoroutine/StopCoroutine engine (not MainThreadDispatcher's queue) is responsible for
+    // an observed StopCoroutine-then-StartCoroutine interaction. See Diagnostic_PlainMonoBehaviour_*.
+    class DiagnosticPlainHost : MonoBehaviour { }
+
+
     // Exercises the native (non-Editor) runtime StopCoroutine path only; the Editor-mode
     // EditorThreadDispatcher/PseudoStopCoroutine internals are #if UNITY_EDITOR and stripped from
     // this standalone-player build (see QueueWorkerTest for their ThreadSafeQueueWorker-level coverage).
@@ -132,6 +139,31 @@ namespace UniRx.Tests
             }
 
             steps.Is(0);
+        }
+
+        // DIAGNOSTIC (temporary): isolates whether the StopCoroutine-then-StartCoroutine suppression
+        // observed above is Unity's own engine behavior, independent of MainThreadDispatcher's queue,
+        // background threads, or UniRx entirely - plain GameObject/MonoBehaviour, same thread, no
+        // threading at all.
+        [UnityTest]
+        public IEnumerator Diagnostic_PlainMonoBehaviour_StopThenStart_NeverRuns()
+        {
+            steps = 0;
+            var go = new GameObject("DiagnosticPlainHost");
+            var host = go.AddComponent<DiagnosticPlainHost>();
+            var routine = CountingRoutine();
+
+            host.StopCoroutine(routine); // never started
+            host.StartCoroutine(routine);
+
+            for (var i = 0; i < DiagnosticFrameMargin; i++)
+            {
+                yield return null;
+            }
+
+            steps.Is(0);
+
+            Object.Destroy(go);
         }
     }
 }
