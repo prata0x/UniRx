@@ -21,8 +21,8 @@ namespace UniRx
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is null.</exception>
         public override IDisposable ScheduleAbsolute(long dueTime, Action action)
         {
-            if (dueTime < Clock)
-                dueTime = Clock;
+            if (dueTime <= Clock)
+                dueTime = Clock + 1;
 
             return base.ScheduleAbsolute(dueTime, action);
         }

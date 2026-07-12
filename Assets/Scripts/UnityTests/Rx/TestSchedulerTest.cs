@@ -113,5 +113,31 @@ namespace UniRx.Tests
             scheduler.Start();
             value.Is(6);
         }
+
+        [Test]
+        public void AdvanceBy_MakesProgressForZeroDelayRecursiveScheduling()
+        {
+            // Regression case: ScheduleAbsolute must clamp a past-or-current dueTime to
+            // Clock + 1 (not Clock), or work that reschedules itself with TimeSpan.Zero keeps
+            // firing at the same virtual instant forever and the clock never advances.
+            var localScheduler = new TestScheduler();
+            var count = 0;
+            const int iterations = 50;
+            Action recurse = null;
+            recurse = () =>
+            {
+                count++;
+                if (count < iterations)
+                {
+                    localScheduler.Schedule(TimeSpan.Zero, recurse);
+                }
+            };
+            localScheduler.Schedule(TimeSpan.Zero, recurse);
+
+            localScheduler.AdvanceBy(iterations);
+
+            count.Is(iterations);
+            localScheduler.Clock.Is(iterations);
+        }
     }
 }
