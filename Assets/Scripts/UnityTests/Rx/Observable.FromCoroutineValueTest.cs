@@ -92,6 +92,13 @@ namespace UniRx.Tests
             return (IEnumerator)generic.Invoke(null, new object[] { enumerator, observer, CancellationToken.None, nullAsNextUpdate });
         }
 
+        static IEnumerator InvokeWrapToCancellableEnumerator<T>(IEnumerator enumerator, IObserver<T> observer)
+        {
+            var method = typeof(Observable).GetMethod("WrapToCancellableEnumerator", BindingFlags.NonPublic | BindingFlags.Static);
+            var generic = method.MakeGenericMethod(typeof(T));
+            return (IEnumerator)generic.Invoke(null, new object[] { enumerator, observer, CancellationToken.None });
+        }
+
         // Mimics Unity's native nested-coroutine execution: when Current is an IEnumerator,
         // recursively drives it. If the nested drive throws, Unity logs the exception and
         // silently kills the whole coroutine chain -- it never rethrows to the outer coroutine.
@@ -192,6 +199,54 @@ namespace UniRx.Tests
             observer.OnErrorCallCount.Is(1);
             observer.Error.Is(first);
             observer.OnCompletedCallCount.Is(0);
+        }
+
+        [Test]
+        public void NestedEnumeratorError_PropagatesToOnError_ThroughWrapToCancellableEnumerator()
+        {
+            var observer = new RecordingObserver<object>();
+            var exception = new InvalidOperationException("nested failure");
+            var wrapped = InvokeWrapToCancellableEnumerator(CoroutineYieldingNested(new ThrowingEnumerator(exception)), observer);
+
+            DriveCoroutine(wrapped).IsTrue(); // the wrapper itself must not let the exception escape
+
+            observer.OnErrorCallCount.Is(1);
+            observer.Error.Is(exception);
+        }
+
+        [Test]
+        public void DeeplyNestedEnumeratorError_DoesNotDoubleFireOnError_ThroughWrapToCancellableEnumerator()
+        {
+            var observer = new RecordingObserver<object>();
+            var first = new InvalidOperationException("first nested failure");
+            var second = new InvalidOperationException("second nested failure");
+            var wrapped = InvokeWrapToCancellableEnumerator<object>(CoroutineYieldingNested(TwoThrowingEnumerators(first, second)), observer);
+
+            DriveCoroutine(wrapped).IsTrue();
+
+            observer.OnErrorCallCount.Is(1);
+            observer.Error.Is(first);
+        }
+
+        static IEnumerator CoroutineYieldingObservableYieldInstruction(Exception exception)
+        {
+            // ObservableYieldInstruction<T> is itself an IEnumerator (that's what lets a coroutine
+            // do `yield return obs.ToYieldInstruction()`), so it takes the same nested-IEnumerator
+            // path as any other nested coroutine in WrapToCancellableEnumerator.
+            yield return Observable.Throw<int>(exception).ToYieldInstruction(throwOnError: true);
+        }
+
+        [Test]
+        public void NestedObservableYieldInstructionError_PropagatesToOnError_ThroughWrapToCancellableEnumerator()
+        {
+            var observer = new RecordingObserver<object>();
+            var exception = new InvalidOperationException("yield instruction failure");
+            var wrapped = InvokeWrapToCancellableEnumerator(CoroutineYieldingObservableYieldInstruction(exception), observer);
+
+            DriveCoroutine(wrapped).IsTrue(); // the wrapper itself must not let the exception escape
+
+            observer.OnErrorCallCount.Is(1);
+            observer.Error.Is(exception);
         }
     }
 }
