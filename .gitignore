@@ -10,11 +10,12 @@
 */publish
 $tf
 TestResults
-*.sln
-*.csproj
-*.unityproj
+/*.sln
+/*.csproj
+/*.unityproj
 [Ll]ibrary/
 [Tt]emp/
+/tmp/
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
