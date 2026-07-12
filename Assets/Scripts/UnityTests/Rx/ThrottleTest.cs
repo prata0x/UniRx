@@ -33,7 +33,7 @@ namespace UniRx.Tests
             subject.OnNext(1);
             scheduler.AdvanceBy(50);
             subject.OnNext(2);
-            scheduler.AdvanceBy(50); // only 50 ticks since the second value; its own publish isn't due yet
+            scheduler.AdvanceBy(100); // reaches the second value's own due time; the first value's publish was cancelled and never fires
 
             received.Is(2);
         }

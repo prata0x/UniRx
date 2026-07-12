@@ -64,11 +64,14 @@ namespace UniRx.Operators
             {
                 lock (gate)
                 {
+                    // A stale callback (id != currentid) must not touch hasValue -- clearing it
+                    // unconditionally here would let a stale, superseded callback suppress the
+                    // delivery a later, still-current callback is about to make for a newer value.
                     if (hasValue && id == currentid)
                     {
                         observer.OnNext(latestValue);
+                        hasValue = false;
                     }
-                    hasValue = false;
                 }
             }
 
