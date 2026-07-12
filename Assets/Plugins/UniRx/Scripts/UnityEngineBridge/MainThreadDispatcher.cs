@@ -136,6 +136,22 @@ namespace UniRx
                 editorQueueWorker.ExecuteAll(x => Debug.LogException(x));
             }
 
+            // A routine can be stopped (PseudoStopCoroutine removing its routineIdMap entry)
+            // while its current step is already executing -- e.g. it calls StopCoroutine on
+            // itself, or a stop lands on another thread mid-step. RemoveActionByState() then has
+            // nothing queued to remove, so without this check the step below would still
+            // re-enqueue the next frame's work under a routineId that's already gone, making the
+            // routine unstoppable (routineIdMap no longer has an entry for it, so any further
+            // PseudoStopCoroutine call is a silent no-op) instead of actually stopping.
+            bool IsRoutineActive(IEnumerator rootRoutine, object routineId)
+            {
+                lock (routineIdMapGate)
+                {
+                    object currentRoutineId;
+                    return routineIdMap.TryGetValue(rootRoutine, out currentRoutineId) && ReferenceEquals(currentRoutineId, routineId);
+                }
+            }
+
             void ConsumeEnumerator(IEnumerator routine, IEnumerator rootRoutine, object routineId)
             {
                 bool hasNext;
@@ -158,6 +174,15 @@ namespace UniRx
 
                 if (hasNext)
                 {
+                    if (!IsRoutineActive(rootRoutine, routineId))
+                    {
+                        // Stopped while the step above (routine.MoveNext()) was executing --
+                        // e.g. the routine called StopCoroutine on itself. RemoveActionByState()
+                        // in PseudoStopCoroutine had nothing queued to remove at that point, so
+                        // this is the only place left to actually stop the chain.
+                        return;
+                    }
+
                     var current = routine.Current;
                     if (current == null)
                     {
