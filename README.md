@@ -1193,7 +1193,7 @@ Therefore, when using NETFX_CORE, please refrain from using such constructs as `
 
 DLL Separation
 ---
-If you want to pre-build UniRx, you can build own dll. clone project and open `UniRx.sln`, you can see `UniRx`, it is fullset separated project of UniRx. You should define compile symbol like  `UNITY;UNITY_5_4_OR_NEWER;UNITY_5_4_0;UNITY_5_4;UNITY_5;` + `UNITY_EDITOR`, `UNITY_IPHONE` or other platform symbol. We can not provides pre-build binary to release page, asset store because compile symbol is different each other.
+If you want to pre-build UniRx, you can build your own DLL from `Dlls/UniRx.Library/UniRx.Library.csproj` (`msbuild Dlls/UniRx.Library/UniRx.Library.csproj`). We can not provide a pre-build binary on the release page or asset store because compile symbols differ between projects.
 
 UPM Package
 ---
