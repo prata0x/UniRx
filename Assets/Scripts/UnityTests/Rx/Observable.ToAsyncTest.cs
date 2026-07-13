@@ -6,6 +6,13 @@ namespace UniRx.Tests
     public class ObservableToAsyncTest
     {
         [Test]
+        public void ToAsyncFunc1()
+        {
+            Func<int, int> square = x => x * x;
+            Observable.ToAsync(square)(4).Wait().Is(16);
+        }
+
+        [Test]
         public void ToAsyncFunc2()
         {
             Func<int, int, int> add = (x, y) => x + y;
@@ -31,6 +38,17 @@ namespace UniRx.Tests
         {
             Func<int, int, int> throwing = (x, y) => { throw new InvalidOperationException("fail"); };
             Assert.Throws<InvalidOperationException>(() => Observable.ToAsync(throwing)(1, 2).Wait());
+        }
+
+        [Test]
+        public void ToAsyncAction1()
+        {
+            var received = 0;
+            Action<int> record = x => received = x;
+
+            Observable.ToAsync(record)(1).Wait();
+
+            received.Is(1);
         }
 
         [Test]
