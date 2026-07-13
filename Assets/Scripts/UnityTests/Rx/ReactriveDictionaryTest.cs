@@ -79,5 +79,19 @@ namespace UniRx.Tests
         {
             new ReactiveDictionary<string, int>((Dictionary<string, int>)null).IsNull().IsTrue();
         }
+
+        [Test]
+        public void IsNullIsReachableThroughIReactiveDictionary()
+        {
+            IReactiveDictionary<string, int> dict = new ReactiveDictionary<string, int>((Dictionary<string, int>)null);
+            dict.IsNull().IsTrue();
+        }
+
+        [Test]
+        public void IsNullIsReachableThroughIReadOnlyReactiveDictionary()
+        {
+            IReadOnlyReactiveDictionary<string, int> dict = new ReactiveDictionary<string, int>();
+            dict.IsNull().IsFalse();
+        }
     }
 }

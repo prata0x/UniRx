@@ -99,6 +99,12 @@ namespace UniRx
         bool ContainsKey(TKey key);
         bool TryGetValue(TKey key, out TValue value);
 
+        /// <summary>
+        /// Checks whether the internal dictionary is null, e.g. after deserialization paths
+        /// (such as Unity's own serialization system) that bypass the constructors.
+        /// </summary>
+        bool IsNull();
+
         IObservable<DictionaryAddEvent<TKey, TValue>> ObserveAdd();
         IObservable<int> ObserveCountChanged(bool notifyCurrentCount = false);
         IObservable<DictionaryRemoveEvent<TKey, TValue>> ObserveRemove();
