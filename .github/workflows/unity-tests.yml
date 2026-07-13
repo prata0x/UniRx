@@ -45,3 +45,35 @@ jobs:
         run: |
           chmod +x ./bin/UnitTest/StandaloneLinux64_Mono2x/test
           ./bin/UnitTest/StandaloneLinux64_Mono2x/test
+
+  test-editmode:
+    name: EditMode Test (Unity ${{ matrix.unity-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        unity-version:
+          - 2019.4.41f2
+          - 2020.3.49f1
+          - 2021.3.45f2
+          - 2022.3.62f3
+          - 6000.0.79f1
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: game-ci/unity-test-runner@0ff419b913a3630032cbe0de48a0099b5a9f0ed9 # v4.3.1
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: ${{ matrix.unity-version }}
+          testMode: editmode
+          artifactsPath: editmode-artifacts
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: EditMode test results (${{ matrix.unity-version }})
+          path: editmode-artifacts
