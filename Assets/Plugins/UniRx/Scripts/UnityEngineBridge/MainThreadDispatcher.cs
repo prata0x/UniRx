@@ -102,11 +102,14 @@ namespace UniRx
             public void PseudoStartCoroutine(IEnumerator routine)
             {
                 var routineId = new object();
+                // Registration and the first Enqueue must happen atomically: if a PseudoStopCoroutine
+                // landed between them, its routineIdMap removal would have no queued action to find,
+                // letting this first step run after StopCoroutine already returned to its caller.
                 lock (routineIdMapGate)
                 {
                     routineIdMap[routine] = routineId;
+                    editorQueueWorker.Enqueue(_ => ConsumeEnumerator(routine, routine, routineId), routineId);
                 }
-                editorQueueWorker.Enqueue(_ => ConsumeEnumerator(routine, routine, routineId), routineId);
             }
 
             /// <summary>
@@ -115,7 +118,9 @@ namespace UniRx
             /// reference-based matching). Coroutines started via StartUpdateMicroCoroutine and its
             /// FixedUpdate/EndOfFrame siblings don't go through this path and can't be stopped here.
             /// No-ops (does not throw) for an unknown or already-finished routine, matching Unity's
-            /// own StopCoroutine behavior.
+            /// own StopCoroutine behavior. Only cancels work not yet started: a step already
+            /// executing when this is called still runs to completion, matching Unity's own
+            /// StopCoroutine.
             /// </summary>
             public void PseudoStopCoroutine(IEnumerator routine)
             {
@@ -147,8 +152,30 @@ namespace UniRx
             {
                 lock (routineIdMapGate)
                 {
-                    object currentRoutineId;
-                    return routineIdMap.TryGetValue(rootRoutine, out currentRoutineId) && ReferenceEquals(currentRoutineId, routineId);
+                    return IsRoutineActiveUnsafe(rootRoutine, routineId);
+                }
+            }
+
+            bool IsRoutineActiveUnsafe(IEnumerator rootRoutine, object routineId)
+            {
+                object currentRoutineId;
+                return routineIdMap.TryGetValue(rootRoutine, out currentRoutineId) && ReferenceEquals(currentRoutineId, routineId);
+            }
+
+            // Checking IsRoutineActive and calling Enqueue as two separate steps leaves a window
+            // where a PseudoStopCoroutine landing between them removes the routineIdMap entry but
+            // finds nothing queued yet to remove, so the stale continuation still gets enqueued.
+            // Folding both into one routineIdMapGate lock closes that window. Lock order here is
+            // always routineIdMapGate -> ThreadSafeQueueWorker's own internal gate; nothing ever
+            // takes them in the reverse order, so this can't deadlock.
+            void EnqueueIfActive(IEnumerator rootRoutine, object routineId, Action<object> action)
+            {
+                lock (routineIdMapGate)
+                {
+                    if (IsRoutineActiveUnsafe(rootRoutine, routineId))
+                    {
+                        editorQueueWorker.Enqueue(action, routineId);
+                    }
                 }
             }
 
@@ -197,7 +224,7 @@ namespace UniRx
                     if (type == typeof(WWW))
                     {
                         var www = (WWW)current;
-                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapWaitWWW(www, routine, rootRoutine, routineId), rootRoutine, routineId), routineId);
+                        EnqueueIfActive(rootRoutine, routineId, _ => ConsumeEnumerator(UnwrapWaitWWW(www, routine, rootRoutine, routineId), rootRoutine, routineId));
                         return;
                     }
                     else
@@ -208,7 +235,7 @@ namespace UniRx
                     if (typeof(AsyncOperation).IsAssignableFrom(type))
                     {
                         var asyncOperation = (AsyncOperation)current;
-                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapWaitAsyncOperation(asyncOperation, routine, rootRoutine, routineId), rootRoutine, routineId), routineId);
+                        EnqueueIfActive(rootRoutine, routineId, _ => ConsumeEnumerator(UnwrapWaitAsyncOperation(asyncOperation, routine, rootRoutine, routineId), rootRoutine, routineId));
                         return;
                     }
                     else if (type == typeof(WaitForSeconds))
@@ -216,7 +243,7 @@ namespace UniRx
                         var waitForSeconds = (WaitForSeconds)current;
                         var accessor = typeof(WaitForSeconds).GetField("m_Seconds", BindingFlags.Instance | BindingFlags.GetField | BindingFlags.NonPublic);
                         var second = (float)accessor.GetValue(waitForSeconds);
-                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapWaitForSeconds(second, routine, rootRoutine, routineId), rootRoutine, routineId), routineId);
+                        EnqueueIfActive(rootRoutine, routineId, _ => ConsumeEnumerator(UnwrapWaitForSeconds(second, routine, rootRoutine, routineId), rootRoutine, routineId));
                         return;
                     }
                     else if (type == typeof(Coroutine))
@@ -228,13 +255,13 @@ namespace UniRx
                     else if (current is IEnumerator)
                     {
                         var enumerator = (IEnumerator)current;
-                        editorQueueWorker.Enqueue(_ => ConsumeEnumerator(UnwrapEnumerator(enumerator, routine, rootRoutine, routineId), rootRoutine, routineId), routineId);
+                        EnqueueIfActive(rootRoutine, routineId, _ => ConsumeEnumerator(UnwrapEnumerator(enumerator, routine, rootRoutine, routineId), rootRoutine, routineId));
                         return;
                     }
 #endif
 
                     ENQUEUE:
-                    editorQueueWorker.Enqueue(_ => ConsumeEnumerator(routine, rootRoutine, routineId), routineId); // next update
+                    EnqueueIfActive(rootRoutine, routineId, _ => ConsumeEnumerator(routine, rootRoutine, routineId)); // next update
                 }
                 else if (ReferenceEquals(routine, rootRoutine))
                 {
