@@ -261,7 +261,7 @@ namespace UniRx
 #endif
 
                     ENQUEUE:
-                    EnqueueIfActive(rootRoutine, routineId, _ => ConsumeEnumerator(routine, rootRoutine, routineId)); // next update
+                    editorQueueWorker.Enqueue(_ => ConsumeEnumerator(routine, rootRoutine, routineId), routineId); // next update -- SCRATCH: reverted to verify old-fail
                 }
                 else if (ReferenceEquals(routine, rootRoutine))
                 {
