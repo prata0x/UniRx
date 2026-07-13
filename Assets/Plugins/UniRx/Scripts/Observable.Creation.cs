@@ -372,6 +372,67 @@ namespace UniRx
             };
         }
 
+        public static Func<T1, IObservable<TResult>> ToAsync<T1, TResult>(Func<T1, TResult> function)
+        {
+            return ToAsync(function, Scheduler.DefaultSchedulers.AsyncConversions);
+        }
+
+        public static Func<T1, IObservable<TResult>> ToAsync<T1, TResult>(Func<T1, TResult> function, IScheduler scheduler)
+        {
+            return (arg1) =>
+            {
+                var subject = new AsyncSubject<TResult>();
+
+                scheduler.Schedule(() =>
+                {
+                    var result = default(TResult);
+                    try
+                    {
+                        result = function(arg1);
+                    }
+                    catch (Exception exception)
+                    {
+                        subject.OnError(exception);
+                        return;
+                    }
+                    subject.OnNext(result);
+                    subject.OnCompleted();
+                });
+
+                return subject.AsObservable();
+            };
+        }
+
+        public static Func<T1, IObservable<Unit>> ToAsync<T1>(Action<T1> action)
+        {
+            return ToAsync(action, Scheduler.DefaultSchedulers.AsyncConversions);
+        }
+
+        public static Func<T1, IObservable<Unit>> ToAsync<T1>(Action<T1> action, IScheduler scheduler)
+        {
+            return (arg1) =>
+            {
+                var subject = new AsyncSubject<Unit>();
+
+                scheduler.Schedule(() =>
+                {
+                    try
+                    {
+                        action(arg1);
+                    }
+                    catch (Exception exception)
+                    {
+                        subject.OnError(exception);
+                        return;
+                    }
+                    subject.OnNext(Unit.Default);
+                    subject.OnCompleted();
+                });
+
+                return subject.AsObservable();
+            };
+        }
+
         public static Func<T1, T2, IObservable<TResult>> ToAsync<T1, T2, TResult>(Func<T1, T2, TResult> function)
         {
             return ToAsync(function, Scheduler.DefaultSchedulers.AsyncConversions);
