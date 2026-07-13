@@ -1,21 +1,24 @@
 > [!IMPORTANT]
-> I have started distributing an evolved version of UniRx in [Cysharp/R3](https://github.com/Cysharp/R3), please use it instead of UniRx.
+> This is an unofficial, personally maintained fork of UniRx, kept alive after [neuecc/UniRx](https://github.com/neuecc/UniRx) was archived. It is not an official continuation or support channel for the original project.
+>
+> Starting a new project? Use [Cysharp/R3](https://github.com/Cysharp/R3) instead — the actively developed successor by the original author (not a drop-in replacement for UniRx's API). This fork exists solely to keep UniRx usable for projects that already depend on it.
 
 UniRx - Reactive Extensions for Unity
 ===
-Created by Yoshifumi Kawai(neuecc)
+Created by Yoshifumi Kawai(neuecc)  
+This fork is unofficially maintained by [prata0x](https://github.com/prata0x).
 
 What is UniRx?
 ---
 UniRx (Reactive Extensions for Unity) is a reimplementation of the .NET Reactive Extensions. The Official Rx implementation is great but doesn't work on Unity and has issues with iOS IL2CPP compatibility. This library fixes those issues and adds some specific utilities for Unity. Supported platforms are PC/Mac/Android/iOS/WebGL/WindowsStore/etc and the library.
 
-UniRx is available on the Unity Asset Store (FREE) - http://u3d.as/content/neuecc/uni-rx-reactive-extensions-for-unity/7tT
+UniRx is available on the Unity Asset Store (FREE) - http://u3d.as/content/neuecc/uni-rx-reactive-extensions-for-unity/7tT (published by the original author; not maintained by this fork)
 
-Blog for update info - https://medium.com/@neuecc
+Blog for update info (original author, upstream) - https://medium.com/@neuecc
 
-Support thread on the Unity Forums: Ask me any question - http://forum.unity3d.com/threads/248535-UniRx-Reactive-Extensions-for-Unity
+Support thread on the Unity Forums (original author's thread, upstream) - http://forum.unity3d.com/threads/248535-UniRx-Reactive-Extensions-for-Unity
 
-Release Notes, see [UniRx/releases](https://github.com/neuecc/UniRx/releases)
+Release Notes, see [prata0x/UniRx/releases](https://github.com/prata0x/UniRx/releases)
 
 UniRx is Core Library (Port of Rx) + Platform Adaptor (MainThreadScheduler/FromCoroutine/etc) + Framework (ObservableTriggers/ReactiveProeperty/etc).
 
@@ -325,7 +328,7 @@ public class MyComponent : MonoBehaviour
 }
 ```
 
-Supported triggers are listed in [UniRx.wiki#UniRx.Triggers](https://github.com/neuecc/UniRx/wiki#unirxtriggers).
+Supported triggers are listed in [UniRx.wiki#UniRx.Triggers](https://github.com/neuecc/UniRx/wiki#unirxtriggers) (upstream wiki).
 
 These can also be handled more easily by directly subscribing to observables returned by extension methods on Component/GameObject. These methods inject ObservableTrigger automaticaly (except for `ObservableEventTrigger` and `ObservableStateMachineTrigger`):
 
@@ -829,7 +832,7 @@ enemy.IsDead.Where(isDead => isDead == true)
 
 You can combine ReactiveProperties, ReactiveCollections and observables returned by UnityEvent.AsObservable. All UI elements are observable.
 
-Generic ReactiveProperties are not serializable or inspecatble in the Unity editor, but UniRx provides specialized subclasses of ReactiveProperty that are. These include classes such as Int/LongReactiveProperty, Float/DoubleReactiveProperty, StringReactiveProperty, BoolReactiveProperty and more (Browse them here: [InspectableReactiveProperty.cs](https://github.com/neuecc/UniRx/blob/master/Assets/Plugins/UniRx/Scripts/UnityEngineBridge/InspectableReactiveProperty.cs)). All are fully editable in the inspector. For custom Enum ReactiveProperty, it's easy to write a custom inspectable ReactiveProperty[T].
+Generic ReactiveProperties are not serializable or inspecatble in the Unity editor, but UniRx provides specialized subclasses of ReactiveProperty that are. These include classes such as Int/LongReactiveProperty, Float/DoubleReactiveProperty, StringReactiveProperty, BoolReactiveProperty and more (Browse them here: [InspectableReactiveProperty.cs](https://github.com/prata0x/UniRx/blob/master/Assets/Plugins/UniRx/Scripts/UnityEngineBridge/InspectableReactiveProperty.cs)). All are fully editable in the inspector. For custom Enum ReactiveProperty, it's easy to write a custom inspectable ReactiveProperty[T].
 
 If you needs `[Multiline]` or `[Range]` attach to ReactiveProperty, you can use `MultilineReactivePropertyAttribute` and `RangeReactivePropertyAttribute` instead of `Multiline` and `Range`.
 
@@ -837,7 +840,7 @@ The provided derived InspectableReactiveProperties are displayed in the inspecto
 
 ![](StoreDocument/RxPropInspector.png)
 
-This functionality is provided by [InspectorDisplayDrawer](https://github.com/neuecc/UniRx/blob/master/Assets/Plugins/UniRx/Scripts/UnityEngineBridge/InspectorDisplayDrawer.cs). You can supply your own custom specialized ReactiveProperties by inheriting from it:
+This functionality is provided by [InspectorDisplayDrawer](https://github.com/prata0x/UniRx/blob/master/Assets/Plugins/UniRx/Scripts/UnityEngineBridge/InspectorDisplayDrawer.cs). You can supply your own custom specialized ReactiveProperties by inheriting from it:
 
 ```csharp
 public enum Fruit
@@ -1182,7 +1185,7 @@ Please submit new analyzer ideas on GitHub Issues!
 
 Samples
 ---
-See [UniRx/Examples](https://github.com/neuecc/UniRx/tree/master/Assets/Plugins/UniRx/Examples)  
+See [UniRx/Examples](https://github.com/prata0x/UniRx/tree/master/Assets/Plugins/UniRx/Examples)  
 
 The samples demonstrate how to do resource management (Sample09_EventHandling), what is the MainThreadDispatcher, among other things.
 
@@ -1197,13 +1200,13 @@ If you want to pre-build UniRx, you can build your own DLL from `Dlls/UniRx.Libr
 
 UPM Package
 ---
-After Unity 2019.3.4f1, Unity 2020.1a21, that support path query parameter of git package. You can add `https://github.com/neuecc/UniRx.git?path=Assets/Plugins/UniRx/Scripts` to Package Manager
+After Unity 2019.3.4f1, Unity 2020.1a21, that support path query parameter of git package. You can add `https://github.com/prata0x/UniRx.git?path=Assets/Plugins/UniRx/Scripts` to Package Manager
 
-or add `"com.neuecc.unirx": "https://github.com/neuecc/UniRx.git?path=Assets/Plugins/UniRx/Scripts"` to `Packages/manifest.json`.
+or add `"com.neuecc.unirx": "https://github.com/prata0x/UniRx.git?path=Assets/Plugins/UniRx/Scripts"` to `Packages/manifest.json`.
 
 Reference
 ---
-* [UniRx/wiki](https://github.com/neuecc/UniRx/wiki)
+* [UniRx/wiki](https://github.com/neuecc/UniRx/wiki) (upstream, reference only)
 
 UniRx API documents.
 
@@ -1235,7 +1238,7 @@ How to integrate with PlayFab API
 
 Help & Contribute
 ---
-Support thread on the Unity forum. Ask me any question - [http://forum.unity3d.com/threads/248535-UniRx-Reactive-Extensions-for-Unity](http://forum.unity3d.com/threads/248535-UniRx-Reactive-Extensions-for-Unity)  
+Support thread on the Unity forum (original author's thread, upstream) - [http://forum.unity3d.com/threads/248535-UniRx-Reactive-Extensions-for-Unity](http://forum.unity3d.com/threads/248535-UniRx-Reactive-Extensions-for-Unity)  
 
 We welcome any contributions, be they bug reports, requests or pull request.  
 Please consult and submit your reports or requests on GitHub issues.  
